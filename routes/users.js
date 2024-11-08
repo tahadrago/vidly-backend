@@ -9,6 +9,12 @@ router.get("/me", auth, async (req, res) => {
   const user = await User.findById(req.user._id).select("-password");
   res.send(user);
 });
+// In users.js
+
+router.get("/", async (req, res) => {
+  const users = await User.find().select("-password"); // Exclude password for security
+  res.send(users);
+});
 
 router.post("/", async (req, res) => {
   const { error } = validate(req.body);
@@ -25,6 +31,7 @@ router.post("/", async (req, res) => {
   const token = user.generateAuthToken();
   res
     .header("x-auth-token", token)
+    .header("access-control-expose-headers", "x-auth-token")
     .send(_.pick(user, ["_id", "name", "email"]));
 });
 

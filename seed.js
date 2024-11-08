@@ -39,23 +39,34 @@ const data = [
 ];
 
 async function seed() {
-  await mongoose.connect(config.get("db"));
+  try {
+    // Adding useNewUrlParser and useUnifiedTopology options to the connection
+    await mongoose.connect(config.get("db"), {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
 
-  await Movie.deleteMany({});
-  await Genre.deleteMany({});
+    console.log("Connected to MongoDB...");
 
-  for (let genre of data) {
-    const { _id: genreId } = await new Genre({ name: genre.name }).save();
-    const movies = genre.movies.map(movie => ({
-      ...movie,
-      genre: { _id: genreId, name: genre.name }
-    }));
-    await Movie.insertMany(movies);
+    await Movie.deleteMany({});
+    await Genre.deleteMany({});
+
+    for (let genre of data) {
+      const { _id: genreId } = await new Genre({ name: genre.name }).save();
+      const movies = genre.movies.map(movie => ({
+        ...movie,
+        genre: { _id: genreId, name: genre.name }
+      }));
+      await Movie.insertMany(movies);
+    }
+
+    console.log("Seeding complete. Disconnecting from MongoDB...");
+  } catch (err) {
+    console.error("Error during seeding:", err);
+  } finally {
+    mongoose.disconnect();
+    console.info("Disconnected from MongoDB.");
   }
-
-  mongoose.disconnect();
-
-  console.info("Done!");
 }
 
 seed();
